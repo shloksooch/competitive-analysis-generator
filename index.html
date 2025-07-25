@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competitive Analysis Generator</title>
+  <!--
+    Competitive Analysis Generator
+
+    This simple web application lets you input one or more competitors
+    along with a short description of their product or service.  It then
+    produces a basic SWOT (Strengths, Weaknesses, Opportunities, Threats)
+    analysis for each competitor using simple keyword heuristics.  The
+    page also demonstrates a very basic A/B testing implementation: each
+    visitor is randomly assigned either Variant A (card layout) or
+    Variant B (tabular layout), and that assignment is stored in the
+    browser's local storage so the same user sees a consistent layout on
+    repeat visits.  This is intended as a starting point for a more
+    sophisticated competitive analysis SaaS; you can replace the
+    heuristics with calls to LLM APIs or your own data pipeline and
+    integrate real A/B testing analytics.
+  -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Competitive Analysis Generator</h1>
+    <p class="subtitle">Generate a basic SWOT analysis for your competitors and experiment with two different report layouts.</p>
+    <form id="analysis-form">
+      <div id="competitors">
+        <!-- Competitor fields will be added here dynamically -->
+      </div>
+      <div class="buttons">
+        <button type="button" id="add-competitor">+ Add Competitor</button>
+        <button type="submit" id="generate">Generate Analysis</button>
+      </div>
+    </form>
+    <div id="results"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
