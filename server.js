@@ -28,14 +28,25 @@ const PORT = process.env.PORT || 3000;
 const metricsFile = path.join(__dirname, 'metrics.json');
 
 // Initialize the metrics counters.  If the file does not exist or
-// cannot be parsed, start with zeros.
+// cannot be parsed, start with zeros.  Metrics now include both
+// view counts (how many times each variant was served) and
+// conversion counts (how many conversions were reported).
 function initMetrics() {
-  let metrics = { variantA: 0, variantB: 0 };
+  let metrics = {
+    variantA: 0,
+    variantB: 0,
+    conversionsA: 0,
+    conversionsB: 0
+  };
   if (fs.existsSync(metricsFile)) {
     try {
       const parsed = JSON.parse(fs.readFileSync(metricsFile));
-      if (typeof parsed.variantA === 'number' && typeof parsed.variantB === 'number') {
-        metrics = parsed;
+      // Merge known keys from existing file to preserve counts when
+      // additional fields are introduced in later versions.
+      if (parsed && typeof parsed === 'object') {
+        Object.keys(metrics).forEach(key => {
+          if (typeof parsed[key] === 'number') metrics[key] = parsed[key];
+        });
       }
     } catch (err) {
       // ignore and use defaults
@@ -156,6 +167,46 @@ function handleMetrics(req, res) {
 }
 
 /**
+ * Handle GET /api/variant
+ * Returns a variant assignment (A or B) for A/B testing.  Every call
+ * increments the corresponding view counter.  The caller should
+ * record the variant it receives and later call /api/convert when a
+ * conversion event occurs.  Example response: { variant: 'A' }
+ */
+function handleVariant(req, res) {
+  // Randomly assign the user to variant A or B
+  const variant = Math.random() < 0.5 ? 'A' : 'B';
+  if (variant === 'A') metrics.variantA++;
+  else metrics.variantB++;
+  fs.writeFileSync(metricsFile, JSON.stringify(metrics));
+  sendJson(res, 200, { variant });
+}
+
+/**
+ * Handle POST /api/convert
+ * Expects a JSON body like { variant: 'A' } to record a conversion
+ * event for the given variant.  Responds with the updated metrics.
+ */
+function handleConvert(req, res) {
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk;
+    if (body.length > 1e6) req.connection.destroy();
+  });
+  req.on('end', () => {
+    try {
+      const { variant } = JSON.parse(body || '{}');
+      if (variant === 'A') metrics.conversionsA++;
+      else if (variant === 'B') metrics.conversionsB++;
+      fs.writeFileSync(metricsFile, JSON.stringify(metrics));
+      sendJson(res, 200, metrics);
+    } catch (err) {
+      sendJson(res, 400, { error: 'Invalid JSON payload' });
+    }
+  });
+}
+
+/**
  * Serve static files from the client directory.  Looks for files
  * relative to the project root; defaults to index.html if the path is
  * "/".  Provides minimal security by disallowing directory traversal.
@@ -197,6 +248,12 @@ const server = http.createServer((req, res) => {
   }
   if (method === 'GET' && pathname === '/api/metrics') {
     return handleMetrics(req, res);
+  }
+  if (method === 'GET' && pathname === '/api/variant') {
+    return handleVariant(req, res);
+  }
+  if (method === 'POST' && pathname === '/api/convert') {
+    return handleConvert(req, res);
   }
   // Otherwise serve static files
   return serveStatic(req, res);
