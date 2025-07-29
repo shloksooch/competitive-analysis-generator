@@ -4,39 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Competitive Analysis Generator</title>
-  <!--
-    Competitive Analysis Generator
-
-    This simple web application lets you input one or more competitors
-    along with a short description of their product or service.  It then
-    produces a basic SWOT (Strengths, Weaknesses, Opportunities, Threats)
-    analysis for each competitor using simple keyword heuristics.  The
-    page also demonstrates a very basic A/B testing implementation: each
-    visitor is randomly assigned either Variant A (card layout) or
-    Variant B (tabular layout), and that assignment is stored in the
-    browser's local storage so the same user sees a consistent layout on
-    repeat visits.  This is intended as a starting point for a more
-    sophisticated competitive analysis SaaS; you can replace the
-    heuristics with calls to LLM APIs or your own data pipeline and
-    integrate real A/B testing analytics.
-  -->
-  <link rel="stylesheet" href="styles.css">
+  <!-- Base stylesheet providing common layout and utility classes -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Chart.js for rendering bar charts on the dashboard.  Loaded from a CDN to avoid extra dependencies. -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="container">
+  <header>
     <h1>Competitive Analysis Generator</h1>
-    <p class="subtitle">Generate a basic SWOT analysis for your competitors and experiment with two different report layouts.</p>
-    <form id="analysis-form">
-      <div id="competitors">
-        <!-- Competitor fields will be added here dynamically -->
-      </div>
-      <div class="buttons">
-        <button type="button" id="add-competitor">+ Add Competitor</button>
-        <button type="submit" id="generate">Generate Analysis</button>
-      </div>
-    </form>
-    <div id="results"></div>
-  </div>
+    <!-- Primary navigation.  Active state is managed via JavaScript. -->
+    <nav>
+      <button id="nav-analyze" class="active">Analyze</button>
+      <button id="nav-dashboard">Dashboard</button>
+      <button id="nav-login">Login</button>
+      <button id="nav-register">Register</button>
+      <button id="nav-logout" style="display:none;">Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Authentication: Login -->
+    <section id="login-section" class="auth-section" style="display:none;">
+      <h2>Login</h2>
+      <input type="text" id="login-username" placeholder="Username" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button id="login-button">Login</button>
+      <p>No account? <a id="show-register" style="cursor:pointer;">Register here</a></p>
+    </section>
+
+    <!-- Authentication: Register -->
+    <section id="register-section" class="auth-section" style="display:none;">
+      <h2>Register</h2>
+      <input type="text" id="register-username" placeholder="Username" />
+      <input type="password" id="register-password" placeholder="Password" />
+      <button id="register-button">Register</button>
+      <p>Already have an account? <a id="show-login" style="cursor:pointer;">Login here</a></p>
+    </section>
+
+    <!-- Analysis creation area.  Visible to all users; authenticated users will store analyses. -->
+    <section id="analysis-section" class="form-section">
+      <h2>Create Analysis</h2>
+      <p class="variant-info" id="analysis-info"></p>
+      <form id="analysis-form">
+        <div id="competitors"></div>
+        <div class="buttons">
+          <button type="button" id="add-competitor">+ Add Competitor</button>
+          <button type="submit" id="generate">Generate Analysis</button>
+        </div>
+      </form>
+      <div id="results"></div>
+    </section>
+
+    <!-- Dashboard for metrics visualization -->
+    <section id="dashboard-section" class="dashboard" style="display:none;">
+      <h2>Dashboard</h2>
+      <div id="metrics-summary" class="metrics-summary"></div>
+      <canvas id="metrics-chart" width="600" height="300"></canvas>
+      <button id="refresh-metrics">Refresh Metrics</button>
+    </section>
+  </main>
+
+  <!-- Main application script -->
   <script src="script.js"></script>
 </body>
 </html>
